@@ -9,6 +9,7 @@ declare global {
       readTextFile: (filePath: string) => Promise<string | null>;
       readDirectory: (directory: string) => Promise<string[]>;
       openFile: (filePath: string, directory: string) => void;
+      directoryDialog: () => Promise<string>;
     }
   }
 }
@@ -35,7 +36,7 @@ function App() {
       />
       <button onClick={handleFileRead}>Read File</button>
       <pre>{fileContent}</pre>
-      <PdfsList directory="C:\Users\atattos\CustomDocs\react file manager\backend\pdfs" />
+      <PdfsList />
     </div>
   );
 
@@ -67,8 +68,14 @@ function App() {
   // )
 }
 
-function PdfsList({ directory }: { directory: string | null }) {
+function PdfsList() {
   const [pdfList, setPdfList] = useState<string[]>([]);
+  const [directory, setDirectory] = useState<string | null>("");
+
+  const handleDirectoryDialog = async () => {
+    const dir = await window.electron.directoryDialog();
+    setDirectory(dir);
+  }
 
   const handleDirectoryRead = async () => {
     if (!directory) return;
@@ -79,11 +86,14 @@ function PdfsList({ directory }: { directory: string | null }) {
 
   const handleOnClick = (event: React.MouseEvent<HTMLAnchorElement>, fileName: string) => {
     event.preventDefault();
-    window.electron.openFile(fileName, directory!);
+    if (!directory) return;
+    window.electron.openFile(fileName, directory);
   }
 
   return (
     <div>
+      <button onClick={handleDirectoryDialog}>Choose directory</button>
+      <span>{directory}</span><br></br>
       <button onClick={handleDirectoryRead}>Read directory</button>
       <ul>
         {pdfList.map((value, index) => (
