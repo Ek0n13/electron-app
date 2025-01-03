@@ -1,12 +1,14 @@
-import { useState } from 'react'
+import { useState } from 'react';
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
-import './App.css'
+import './App.css';
 
 declare global {
   interface Window {
     electron: {
       readTextFile: (filePath: string) => Promise<string | null>;
+      readDirectory: (directory: string) => Promise<string[]>;
+      openFile: (filePath: string, directory: string) => void;
     }
   }
 }
@@ -33,6 +35,7 @@ function App() {
       />
       <button onClick={handleFileRead}>Read File</button>
       <pre>{fileContent}</pre>
+      <PdfsList directory="C:\Users\atattos\CustomDocs\react file manager\backend\pdfs" />
     </div>
   );
 
@@ -62,6 +65,35 @@ function App() {
   //     </p>
   //   </>
   // )
+}
+
+function PdfsList({ directory }: { directory: string | null }) {
+  const [pdfList, setPdfList] = useState<string[]>([]);
+
+  const handleDirectoryRead = async () => {
+    if (!directory) return;
+
+    const fileList = await window.electron.readDirectory(directory);
+    setPdfList(fileList);
+  }
+
+  const handleOnClick = (event: React.MouseEvent<HTMLAnchorElement>, fileName: string) => {
+    event.preventDefault();
+    window.electron.openFile(fileName, directory!);
+  }
+
+  return (
+    <div>
+      <button onClick={handleDirectoryRead}>Read directory</button>
+      <ul>
+        {pdfList.map((value, index) => (
+          <li key={index}>
+            <a href='#' onClick={(event) => handleOnClick(event, value)}>{value}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default App
