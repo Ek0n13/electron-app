@@ -1,0 +1,39 @@
+{
+  "name": "electron-app",
+  "private": true,
+  "version": "0.0.0",
+  
+  "main": "dist/main.js",
+  
+  "scripts": {
+    "dev": "vite",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    
+    "build:main": "tsc main.ts --outDir dist --module commonjs",
+    "build:preload": "tsc preload.ts --outDir dist --module commonjs",
+    "build": "vite build && npm run build:main && npm run build:preload && electron-builder",
+    
+    "start": "npm run build:preload && npm run build:main && electron dist/main.js"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.18.2",
+    "vite": "^6.0.5"
+  }
+}
