@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
+import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -17,9 +18,9 @@ ipcMain.handle('directory-dialog', async(_event) => {
       properties: [
         "openDirectory",
       ],
-      filters: [
-        { name: 'PDF Files', extensions: ['pdf'] }
-      ]
+      // filters: [
+      //   { name: 'PDF Files', extensions: ['pdf'] }
+      // ]
     });
 
     if (!dialogResult) return null;
@@ -28,7 +29,7 @@ ipcMain.handle('directory-dialog', async(_event) => {
 
     return dialogResult[0];
   } catch (error) {
-    console.error('Error reading file:', error);
+    console.error('Error reading directory:', error);
     return null;
   }
 });
@@ -50,19 +51,43 @@ ipcMain.on('open-file', (_event, fileName, directory) => {
     .catch((err) => console.error('Error opening file:', err));
 });
 
+ipcMain.on('file-yt-search', (_event, fileString: string) => {
+  const strippedFileName = path.parse(fileString).name.trim();
+
+  const searchString = strippedFileName
+    .replace(/&/g, '%26')
+    .replace(/\'/g, '')
+    .replace(/\"/g, '')
+    .replace(/ /g, '+')
+    .trim();
+
+  const finalUrl = `https://www.youtube.com/results?search_query=${searchString}+hq`
+  
+  openInEdge(finalUrl);
+});
+
+function openInEdge(url: string): void {
+  const msedgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
+
+  exec(`"${msedgePath}" "${url}"`, (error) => {
+    if (!error) return;
+    console.error("Failed to open URL in Edge:", error.message);
+  });
+}
+
 let mainWindow: BrowserWindow | null;
 
 app.on('ready', () => {
-    mainWindow = new BrowserWindow({
-        width: 1280,
-        height: 720,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'), // for secure communication
-            contextIsolation: true,
-        },
-    });
+  mainWindow = new BrowserWindow({
+    width: 1280,
+    height: 720,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'), // for secure communication
+      contextIsolation: true,
+    },
+  });
 
-    mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
+  mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
 });
 
 app.on('window-all-closed', () => {

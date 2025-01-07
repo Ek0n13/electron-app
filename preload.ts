@@ -5,8 +5,11 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.invoke('read-text-file', filePath),
     readDirectory: (directory: string) =>
         ipcRenderer.invoke('read-directory', directory),
-    openFile: (fileName: string, directory: string) =>
-        ipcRenderer.send('open-file', fileName, directory),
     directoryDialog: () =>
         ipcRenderer.invoke('directory-dialog'),
+
+    openFile: (fileName: string, directory: string) =>
+        ipcRenderer.sendSync('open-file', fileName, directory),
+    fileYTSearch: (fileString: string) =>
+        ipcRenderer.sendSync('file-yt-search', fileString),
 });
