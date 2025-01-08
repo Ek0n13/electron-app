@@ -9,7 +9,9 @@ contextBridge.exposeInMainWorld('electron', {
         ipcRenderer.invoke('directory-dialog'),
 
     openFile: (fileName: string, directory: string) =>
-        ipcRenderer.sendSync('open-file', fileName, directory),
+        ipcRenderer.send('open-file', fileName, directory),
     fileYTSearch: (fileString: string) =>
-        ipcRenderer.sendSync('file-yt-search', fileString),
+        ipcRenderer.send('file-yt-search', fileString),
+    // showContextMenu: (x: number, y: number) =>
+    //     ipcRenderer.sendSync('show-context-menu', { x, y }),
 });

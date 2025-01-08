@@ -1,8 +1,6 @@
 #root {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
 /* .logo {
@@ -41,26 +39,20 @@
   color: #888;
 } */
 
-
-.main-container {
-  padding: 20px;
-}
-
-.main-container input {
-  width: 300px;
-}
-
-.main-container pre {
+#main-container pre {
   background: #f4f4f440;
   padding: 10px;
   border-radius: 5px;
   white-space: pre-wrap;
 }
 
-.main-container button {
-  margin: 0.4em;
+#main-container button {
+  margin: 1rem auto;
 }
 
-.dnone {
-  display: none;
+#pdfs-list li input {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+  color: black;
+  cursor: pointer;
 }

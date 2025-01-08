@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, dialog, BaseWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from 'electron';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -14,9 +14,11 @@ app.on('ready', () => {
       preload: path.join(__dirname, 'preload.js'), // for secure communication
       contextIsolation: true,
     },
+    resizable: false,
   });
 
   mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
+  // mainWindow.loadFile('../index.html');
 });
 
 app.on('window-all-closed', () => {
@@ -65,7 +67,7 @@ ipcMain.handle('read-directory', async(_event, directory) => {
   }
 });
 
-ipcMain.on('open-file', (_event, fileName, directory) => {
+ipcMain.on('open-file', (_event, fileName: string, directory) => {
   const fullPath = path.join(directory, fileName);
   shell.openPath(fullPath)
     .then(() => console.log('File opened'))
@@ -86,6 +88,23 @@ ipcMain.on('file-yt-search', (_event, fileString: string) => {
   
   openInEdge(finalUrl);
 });
+
+// ipcMain.on("show-context-menu", (_event, { x, y }) => {
+//   const template: Array<(Electron.MenuItemConstructorOptions) | (Electron.MenuItem)> = [
+//     {
+//       label: 'Menu Item 1',
+//       click: () => { console.log("Menu item 1 clicked") }
+//     },
+//     { type: 'separator' },
+//     { label: 'Menu Item 2', type: 'checkbox', checked: true }
+//   ];
+
+//   const menu = Menu.buildFromTemplate(template);
+//   menu.popup({
+//     x,
+//     y
+//   });
+// });
 
 function openInEdge(url: string): void {
   const msedgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";

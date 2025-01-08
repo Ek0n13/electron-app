@@ -12,13 +12,20 @@ declare global {
 
       openFile: (filePath: string, directory: string) => void;
       fileYTSearch: (fileString: string) => void;
+      showContextMenu: (x: number, y: number) => void;
     }
   }
 }
 
 function App() {
   return (
-    <div className='main-container'>
+    <div id='main-container' className='p-4 grid grid-cols-4 gap-2 leading-10 h-screen'>
+      {/* <div className='p-4 w-full bg-gray-400 col-span-1'>
+        <span>item 1</span>
+      </div>
+      <div className='p-4 w-full bg-gray-400 col-span-2'>
+        <span>item 2</span>
+      </div> */}
       <ReadTextFile />
       <PdfsList />
     </div>
@@ -64,16 +71,22 @@ function ReadTextFile() {
   };
 
   return (
-    <div className='read-text-file'>
-      <h1>Electron + React</h1>
+    <div
+      id='read-text-file'
+      className='p-4 w-full bg-gray-400 col-span-1 rounded-md'
+    >
       <input
         type='text'
         placeholder='Enter file path'
+        className='w-full px-2 rounded-md'
         value={filePath}
         onChange={(e) => setFilePath(e.target.value)}
       />
-      <button onClick={handleFileRead}>Read File</button>
-      <pre className={fileContent ? '' : 'dnone'}>{fileContent}</pre>
+      <button
+        className='flex justify-self-stretch'
+        onClick={handleFileRead}
+      >Read File</button>
+      <pre className={fileContent ? '' : 'hidden'}>{fileContent}</pre>
     </div>
   )
 }
@@ -97,41 +110,59 @@ function PdfsList() {
     setPdfList(fileList);
   }
 
-  const handleOnClick = (event: React.MouseEvent<HTMLAnchorElement>, fileName: string) => {
+  const handleOpenFile = (event: React.MouseEvent<HTMLInputElement>, fileName: string) => {
     event.preventDefault();
     
     window.electron.openFile(fileName, directory!);
   }
   
-  const handleYTSearch = (event: React.MouseEvent<HTMLAnchorElement>, fileString: string) => {
+  const handleYTSearch = (event: React.MouseEvent<HTMLInputElement>, fileString: string) => {
     event.preventDefault();
     
     window.electron.fileYTSearch(fileString);
   }
 
+  // const test = (event: React.MouseEvent<HTMLAnchorElement>) => {
+  //   event.preventDefault();
+
+  //   window.electron.showContextMenu(event.clientX, event.clientY);
+  // }
+
   return (
-    <div className='pdfs-list'>
-      <button onClick={handleDirectoryDialog}>Choose directory</button>
-      <button onClick={handleDirectoryRead}>Read directory</button><br />
-      <pre className={directory ? '' : 'dnone'}>{directory}</pre>
-      <figure className={'list-container' + (pdfList.length === 0 ? ' dnone' : '')}>
-        <figcaption>Open PDF</figcaption>
-        <ul>
-          {pdfList.map((value, index) => (
-            <li key={index}>
-              <a href='#' onClick={(event) => handleOnClick(event, value)}>{value}</a>
-            </li>
-          ))}
-        </ul>
-        <figcaption>Search on YouTube</figcaption>
-        <ul>
+    <div id='pdfs-list' className='p-4 w-full bg-gray-400 col-span-3 rounded-md'>
+      <div
+        id='buttons'
+        className='flex justify-center'
+      >
+        <button onClick={handleDirectoryDialog}>Choose directory</button>
+        <button onClick={handleDirectoryRead}>Read directory</button>
+      </div>
+      <pre
+        className={'text-center' + (directory ? '' : ' hidden')}
+      >{directory}</pre>
+      <ul
+        className={'divide-y' + (pdfList.length === 0 ? ' hidden' : '')}
+      >File List:
         {pdfList.map((value, index) => (
-          <li key={"search-" + index}>
-            <a href='#' onClick={(event) => handleYTSearch(event, value)}>{value.replace('.pdf', '')}</a>
+          <li className='mx-4 px-2 flex justify-between items-center' key={'open-' + index}>
+            <span>{value}</span>
+            <div className='my-1 flex'>
+              <input
+                type='button'
+                value={'Open File'}
+                className='mx-4'
+                onClick={(event) => handleOpenFile(event, value)}
+              />
+              <input
+                type='button'
+                value={'Search YT'}
+                className=''
+                onClick={(event) => handleYTSearch(event, value)}
+              />
+            </div>
           </li>
         ))}
       </ul>
-      </figure>
     </div>
   );
 }
