@@ -56,3 +56,13 @@
   color: black;
   cursor: pointer;
 }
+
+#pdfs-list input[type=button] {
+  font-weight: 500;
+  color: #3741ff;
+  text-decoration: inherit;
+}
+
+#pdfs-list input[type=button]:hover {
+  color: #9e3feb;
+}

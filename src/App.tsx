@@ -108,7 +108,16 @@ function DirectoriesList(props: DirList) {
   const handleDirectoryDialog = async () => {
     const dir = await window.electron.directoryDialog();
 
-    if (!dir) props.setPdfsList([]);
+    if (!dir) {
+      props.setPdfsList([]);
+      props.setActiveDirectory(null);
+
+      setChildrenDirectories([]);
+      setParentDirectory(null);
+      setParentFolder('');
+
+      return;
+    };
 
     setParentDirectory(dir);
     setParentFolder(dir?.split('\\').splice(-1)[0]);
@@ -116,6 +125,9 @@ function DirectoriesList(props: DirList) {
 
   const handleGetChildDirectories = async () => {
     const children = await window.electron.getChildDirectories(parentDirectory!);
+
+    if (!children) return;
+
     setChildrenDirectories(children);
   }
 
@@ -147,9 +159,14 @@ function DirectoriesList(props: DirList) {
           Get Children
         </button>
       </div>
+      <pre
+        className={'text-center' + (parentDirectory ? '' : ' hidden')}
+      >
+        {'Parent Folder: ' + parentFolder}
+      </pre>
       <ul
         className={'divide-y text-black' + (parentDirectory ? '' : ' hidden')}
-      >Parent Folder: {parentFolder}
+      >Folders:
         {childrenDirectories.map((value, index) => (
           <li
             key={index}
@@ -187,12 +204,12 @@ function PdfsList(props: PdfList) {
         className={'text-center' + (props.activeDirectory ? '' : ' hidden')}
       >{props.activeDirectory}</pre>
       <ul
-        className={'divide-y' + (props.pdfList.length === 0 ? ' hidden' : '')}
+        className={'divide-y text-black' + (props.pdfList.length === 0 ? ' hidden' : '')}
       >File List:
         {props.pdfList.map((value, index) => (
           <li
             key={'open-' + index}
-            className='mx-4 px-2 flex justify-between items-center'
+            className='mx-4 px-2 flex justify-between items-center text-black'
           >
             <span>{value}</span>
             <div className='my-1 flex'>

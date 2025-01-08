@@ -69,6 +69,8 @@ ipcMain.handle('read-directory', async(_event, directory) => {
 
 ipcMain.handle('get-child-directories', async(_event, directory) => {
   try {
+    if (!directory) return null;
+
     const childDirs = fs.readdirSync(directory).filter((child) => {
       return fs.statSync(path.join(directory, child)).isDirectory();
     });
