@@ -6,28 +6,42 @@ import './App.css';
 declare global {
   interface Window {
     electron: {
+      joinPaths: (...paths: string[]) => Promise<string | null>;
+
       readTextFile: (filePath: string) => Promise<string | null>;
       readDirectory: (directory: string) => Promise<string[]>;
       directoryDialog: () => Promise<string | null>;
+      getChildDirectories: (directory: string) => Promise<string[]>;
 
       openFile: (filePath: string, directory: string) => void;
       fileYTSearch: (fileString: string) => void;
       showContextMenu: (x: number, y: number) => void;
     }
   }
+
+  type DirList = {
+    className: string,
+    setActiveDirectory: React.Dispatch<React.SetStateAction<string | null>>,
+    setPdfsList: React.Dispatch<React.SetStateAction<string[]>>,
+  }
+
+  type PdfList = {
+    className: string,
+    activeDirectory: string | null,
+    pdfList: string[],
+  }
 }
 
+
 function App() {
+  const [activeDirectory, setActiveDirectory] = useState<string | null>('');
+  const [pdfsList, setPdfsList] = useState<string[]>([]);
+
   return (
-    <div id='main-container' className='p-4 grid grid-cols-4 gap-2 leading-10 h-screen'>
-      {/* <div className='p-4 w-full bg-gray-400 col-span-1'>
-        <span>item 1</span>
-      </div>
-      <div className='p-4 w-full bg-gray-400 col-span-2'>
-        <span>item 2</span>
-      </div> */}
-      <ReadTextFile />
-      <PdfsList />
+    <div id='main-container' className='p-4 grid grid-cols-6 gap-2 leading-10 h-screen'>
+      {/* <ReadTextFile className='p-4 w-full bg-gray-400 col-span-1 rounded-md' /> */}
+      <DirectoriesList className='p-4 w-full bg-gray-400 col-span-2 rounded-md' setActiveDirectory={setActiveDirectory} setPdfsList={setPdfsList} />
+      <PdfsList className='p-4 w-full bg-gray-400 col-span-4 rounded-md' activeDirectory={activeDirectory} pdfList={pdfsList}/>
     </div>
   );
 
@@ -59,61 +73,106 @@ function App() {
   // )
 }
 
-function ReadTextFile() {
-  const [filePath, setFilePath] = useState("");
-  const [fileContent, setFileContent] = useState<string | null>(null);
+// function ReadTextFile({ className } : { className : string }) {
+//   const [filePath, setFilePath] = useState("");
+//   const [fileContent, setFileContent] = useState<string | null>(null);
 
-  const handleFileRead = async () => {
-    if (!filePath) return;
+//   const handleFileRead = async () => {
+//     const content = await window.electron.readTextFile(filePath!);
+//     setFileContent(content);
+//   };
 
-    const content = await window.electron.readTextFile(filePath);
-    setFileContent(content);
-  };
+//   return (
+//     <div id='read-text-file' className={className}>
+//       <input
+//         type='text'
+//         placeholder='Enter file path'
+//         className='w-full px-2 rounded-md'
+//         value={filePath}
+//         onChange={(e) => setFilePath(e.target.value)}
+//       />
+//       <button
+//         className='flex justify-self-stretch'
+//         onClick={handleFileRead}
+//       >Read File</button>
+//       <pre className={fileContent ? '' : 'hidden'}>{fileContent}</pre>
+//     </div>
+//   )
+// }
 
-  return (
-    <div
-      id='read-text-file'
-      className='p-4 w-full bg-gray-400 col-span-1 rounded-md'
-    >
-      <input
-        type='text'
-        placeholder='Enter file path'
-        className='w-full px-2 rounded-md'
-        value={filePath}
-        onChange={(e) => setFilePath(e.target.value)}
-      />
-      <button
-        className='flex justify-self-stretch'
-        onClick={handleFileRead}
-      >Read File</button>
-      <pre className={fileContent ? '' : 'hidden'}>{fileContent}</pre>
-    </div>
-  )
-}
-
-function PdfsList() {
-  const [pdfList, setPdfList] = useState<string[]>([]);
-  const [directory, setDirectory] = useState<string | null>("");
+function DirectoriesList(props: DirList) {
+  const [parentDirectory, setParentDirectory] = useState<string | null>('');
+  const [childrenDirectories, setChildrenDirectories] = useState<string[]>([]);
+  const [parentFolder, setParentFolder] = useState<string | undefined>('');
 
   const handleDirectoryDialog = async () => {
     const dir = await window.electron.directoryDialog();
 
-    if (!dir) setPdfList([]);
+    if (!dir) props.setPdfsList([]);
 
-    setDirectory(dir);
+    setParentDirectory(dir);
+    setParentFolder(dir?.split('\\').splice(-1)[0]);
   }
 
-  const handleDirectoryRead = async () => {
-    if (!directory) return;
-
-    const fileList = await window.electron.readDirectory(directory);
-    setPdfList(fileList);
+  const handleGetChildDirectories = async () => {
+    const children = await window.electron.getChildDirectories(parentDirectory!);
+    setChildrenDirectories(children);
   }
 
+  const handleDirectoryRead = async(event: React.MouseEvent<HTMLAnchorElement>, folder: string) => {
+    event.preventDefault();
+    
+    const activeDir = await window.electron.joinPaths(parentDirectory!, folder);
+    props.setActiveDirectory(activeDir)
+    
+    const fileList = await window.electron.readDirectory(activeDir!);
+    props.setPdfsList(fileList);
+    
+  }
+
+  return (
+    <div id='directories-list' className={props.className}>
+      <div
+        id='buttons'
+        className='flex justify-center'
+      >
+        <button
+          onClick={handleDirectoryDialog}
+        >
+          Choose Folder
+        </button>
+        <button
+          onClick={handleGetChildDirectories}
+        >
+          Get Children
+        </button>
+      </div>
+      <ul
+        className={'divide-y text-black' + (parentDirectory ? '' : ' hidden')}
+      >Parent Folder: {parentFolder}
+        {childrenDirectories.map((value, index) => (
+          <li
+            key={index}
+            className='mx-4'
+          >
+            <a
+              href='#'
+              onClick={(event) => handleDirectoryRead(event, value)}
+            >
+              {value}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PdfsList(props: PdfList) {
   const handleOpenFile = (event: React.MouseEvent<HTMLInputElement>, fileName: string) => {
     event.preventDefault();
     
-    window.electron.openFile(fileName, directory!);
+    window.electron.openFile(fileName, props.activeDirectory!);
   }
   
   const handleYTSearch = (event: React.MouseEvent<HTMLInputElement>, fileString: string) => {
@@ -122,29 +181,19 @@ function PdfsList() {
     window.electron.fileYTSearch(fileString);
   }
 
-  // const test = (event: React.MouseEvent<HTMLAnchorElement>) => {
-  //   event.preventDefault();
-
-  //   window.electron.showContextMenu(event.clientX, event.clientY);
-  // }
-
   return (
-    <div id='pdfs-list' className='p-4 w-full bg-gray-400 col-span-3 rounded-md'>
-      <div
-        id='buttons'
-        className='flex justify-center'
-      >
-        <button onClick={handleDirectoryDialog}>Choose directory</button>
-        <button onClick={handleDirectoryRead}>Read directory</button>
-      </div>
+    <div id='pdfs-list' className={props.className}>
       <pre
-        className={'text-center' + (directory ? '' : ' hidden')}
-      >{directory}</pre>
+        className={'text-center' + (props.activeDirectory ? '' : ' hidden')}
+      >{props.activeDirectory}</pre>
       <ul
-        className={'divide-y' + (pdfList.length === 0 ? ' hidden' : '')}
+        className={'divide-y' + (props.pdfList.length === 0 ? ' hidden' : '')}
       >File List:
-        {pdfList.map((value, index) => (
-          <li className='mx-4 px-2 flex justify-between items-center' key={'open-' + index}>
+        {props.pdfList.map((value, index) => (
+          <li
+            key={'open-' + index}
+            className='mx-4 px-2 flex justify-between items-center'
+          >
             <span>{value}</span>
             <div className='my-1 flex'>
               <input

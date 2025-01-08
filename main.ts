@@ -67,6 +67,19 @@ ipcMain.handle('read-directory', async(_event, directory) => {
   }
 });
 
+ipcMain.handle('get-child-directories', async(_event, directory) => {
+  try {
+    const childDirs = fs.readdirSync(directory).filter((child) => {
+      return fs.statSync(path.join(directory, child)).isDirectory();
+    });
+
+    return childDirs;
+  } catch (error) {
+    console.error('Error finding child directories:', error);
+    return null;
+  }
+});
+
 ipcMain.on('open-file', (_event, fileName: string, directory) => {
   const fullPath = path.join(directory, fileName);
   shell.openPath(fullPath)
@@ -89,22 +102,14 @@ ipcMain.on('file-yt-search', (_event, fileString: string) => {
   openInEdge(finalUrl);
 });
 
-// ipcMain.on("show-context-menu", (_event, { x, y }) => {
-//   const template: Array<(Electron.MenuItemConstructorOptions) | (Electron.MenuItem)> = [
-//     {
-//       label: 'Menu Item 1',
-//       click: () => { console.log("Menu item 1 clicked") }
-//     },
-//     { type: 'separator' },
-//     { label: 'Menu Item 2', type: 'checkbox', checked: true }
-//   ];
-
-//   const menu = Menu.buildFromTemplate(template);
-//   menu.popup({
-//     x,
-//     y
-//   });
-// });
+ipcMain.handle('join-paths', async(_event, ...paths) => {
+  try {
+    return path.join(...paths); 
+  } catch (error) {
+    console.error('Error finding child directories:', error);
+    return null;
+  }
+});
 
 function openInEdge(url: string): void {
   const msedgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";

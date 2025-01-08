@@ -40,7 +40,7 @@
 } */
 
 #main-container pre {
-  background: #f4f4f440;
+  background: hsl(0, 0%, 20%);
   padding: 10px;
   border-radius: 5px;
   white-space: pre-wrap;
