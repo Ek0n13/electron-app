@@ -177,7 +177,7 @@ function LeftSideParent(
           {'Parent Folder: ' + parentFolder}
         </pre>
         <input
-          type='text'
+          type='search'
           placeholder='Search...'
           onInput={(event) => liveSearch(event.currentTarget.value)}
         />
@@ -295,9 +295,9 @@ function PdfsList(
   }
 
   return (
-    <div id='pdf-list-search' className={(displayPdfList.length === 0 ? 'hidden' : '')}>
+    <div id='pdf-list-search' className={(props.pdfList.length === 0 ? 'hidden' : '')}>
       <input
-        type='text'
+        type='search'
         placeholder='Search...'
         onInput={(event) => liveSearch(event.currentTarget.value)}
       />
