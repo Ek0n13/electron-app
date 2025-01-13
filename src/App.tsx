@@ -135,7 +135,7 @@ function LeftSideParent(
     if (!children) return;
 
     // ** REMOVE THIS **
-    let x = Array(10).fill(children).flat();
+    let x: string[] = Array(1).fill(children).flat();
     // ** REMOVE THIS **
 
     snapshotChildren.current = x;
@@ -210,7 +210,7 @@ function DirectoriesList(
     const fileList = await window.electron.readDirectory(activeDir!);
     
     // ** REMOVE THIS **
-    let x: string[] = Array(8).fill(fileList).flat();
+    let x: string[] = Array(1).fill(fileList).flat();
     // ** REMOVE THIS **
     
     props.setPdfsList(x);
