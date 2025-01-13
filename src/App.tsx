@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 import './App.css';
@@ -19,17 +19,16 @@ declare global {
     }
   }
 
-  type DirList = {
-    className: string,
-    setActiveDirectory: React.Dispatch<React.SetStateAction<string | null>>,
-    setPdfsList: React.Dispatch<React.SetStateAction<string[]>>,
-  }
+  type ParamClassName = {
+    className: string
+  };
 
-  type PdfList = {
-    className: string,
+  type PdfsList = {
     activeDirectory: string | null,
     pdfList: string[],
-  }
+  };
+
+  type RightSide = ParamClassName & PdfsList;
 }
 
 
@@ -38,10 +37,10 @@ function App() {
   const [pdfsList, setPdfsList] = useState<string[]>([]);
 
   return (
-    <div id='main-container' className='p-4 grid grid-cols-6 gap-2 leading-10 h-screen'>
+    <div id='main-container' className='p-4 grid grid-cols-6 gap-2 leading-8 h-screen'>
       {/* <ReadTextFile className='p-4 w-full bg-gray-400 col-span-1 rounded-md' /> */}
-      <DirectoriesList className='p-4 w-full bg-gray-400 col-span-2 rounded-md' setActiveDirectory={setActiveDirectory} setPdfsList={setPdfsList} />
-      <PdfsList className='p-4 w-full bg-gray-400 col-span-4 rounded-md' activeDirectory={activeDirectory} pdfList={pdfsList}/>
+      <LeftSideParent className='p-4 w-full h-full bg-gray-400 col-span-2 rounded-md' setActiveDirectory={setActiveDirectory} setPdfsList={setPdfsList} />
+      <RightSideParent className='p-4 w-full h-full bg-gray-400 col-span-4 rounded-md' activeDirectory={activeDirectory} pdfList={pdfsList} />
     </div>
   );
 
@@ -100,10 +99,17 @@ function App() {
 //   )
 // }
 
-function DirectoriesList(props: DirList) {
+function LeftSideParent(
+  props: {
+    className: string,
+    setActiveDirectory: React.Dispatch<React.SetStateAction<string | null>>,
+    setPdfsList: React.Dispatch<React.SetStateAction<string[]>>
+  }
+) {
   const [parentDirectory, setParentDirectory] = useState<string | null>('');
   const [childrenDirectories, setChildrenDirectories] = useState<string[]>([]);
   const [parentFolder, setParentFolder] = useState<string | undefined>('');
+  const snapshotChildren = useRef<string[]>([]);
 
   const handleDirectoryDialog = async () => {
     const dir = await window.electron.directoryDialog();
@@ -128,22 +134,26 @@ function DirectoriesList(props: DirList) {
 
     if (!children) return;
 
-    setChildrenDirectories(children);
+    // ** REMOVE THIS **
+    let x = Array(10).fill(children).flat();
+    // ** REMOVE THIS **
+
+    snapshotChildren.current = x;
+    setChildrenDirectories(x);
   }
 
-  const handleDirectoryRead = async(event: React.MouseEvent<HTMLAnchorElement>, folder: string) => {
-    event.preventDefault();
-    
-    const activeDir = await window.electron.joinPaths(parentDirectory!, folder);
-    props.setActiveDirectory(activeDir)
-    
-    const fileList = await window.electron.readDirectory(activeDir!);
-    props.setPdfsList(fileList);
-    
+  const liveSearch = (inputValue: string) => {
+    if (inputValue === '' || inputValue === null) {
+      setChildrenDirectories(snapshotChildren.current);
+      return;
+    }
+
+    const filteredPdfList = snapshotChildren.current.filter(item => item.toLowerCase().includes(inputValue.toLowerCase()));
+    setChildrenDirectories(filteredPdfList);
   }
 
   return (
-    <div id='directories-list' className={props.className}>
+    <div id='left-side' className={props.className}>
       <div
         id='buttons'
         className='flex justify-center'
@@ -159,15 +169,59 @@ function DirectoriesList(props: DirList) {
           Get Children
         </button>
       </div>
-      <pre
-        className={'text-center' + (parentDirectory ? '' : ' hidden')}
+      <div
+        id='list-parent'
+        className={(parentDirectory ? '' : ' hidden')}
       >
-        {'Parent Folder: ' + parentFolder}
-      </pre>
+        <pre className='text-center'>
+          {'Parent Folder: ' + parentFolder}
+        </pre>
+        <input
+          type='text'
+          placeholder='Search...'
+          onInput={(event) => liveSearch(event.currentTarget.value)}
+        />
+        <DirectoriesList
+          setActiveDirectory={props.setActiveDirectory}
+          setPdfsList={props.setPdfsList}
+          parentDirectory={parentDirectory}
+          childrenDirectories={childrenDirectories}
+        />
+      </div>
+      
+    </div>
+  );
+}
+
+function DirectoriesList(
+  props: {
+    setActiveDirectory: React.Dispatch<React.SetStateAction<string | null>>,
+    setPdfsList: React.Dispatch<React.SetStateAction<string[]>>,
+    parentDirectory: string | null,
+    childrenDirectories: string[],
+  }
+) {
+  const handleDirectoryRead = async(event: React.MouseEvent<HTMLAnchorElement>, folder: string) => {
+    event.preventDefault();
+    
+    const activeDir = await window.electron.joinPaths(props.parentDirectory!, folder);
+    props.setActiveDirectory(activeDir)
+    
+    const fileList = await window.electron.readDirectory(activeDir!);
+    
+    // ** REMOVE THIS **
+    let x: string[] = Array(8).fill(fileList).flat();
+    // ** REMOVE THIS **
+    
+    props.setPdfsList(x);
+  }
+
+  return (
+    <div>
       <ul
-        className={'divide-y text-black' + (parentDirectory ? '' : ' hidden')}
-      >Folders:
-        {childrenDirectories.map((value, index) => (
+        className='divide-y text-black max-h-[66vh] overflow-y-auto'
+      >
+        {props.childrenDirectories.map((value, index) => (
           <li
             key={index}
             className='mx-4'
@@ -185,7 +239,49 @@ function DirectoriesList(props: DirList) {
   );
 }
 
-function PdfsList(props: PdfList) {
+function RightSideParent(
+  props: {
+    className: string,
+    activeDirectory: string | null,
+    pdfList: string[],
+  }
+) {
+  return (
+    <div id='pdfs-list' className={props.className}>
+      <div className={(props.activeDirectory ? '' : ' hidden')}>
+        <pre
+          className={'text-center'}
+        >{props.activeDirectory}</pre>
+        <PdfsList activeDirectory={props.activeDirectory} pdfList={props.pdfList} />
+      </div>
+    </div>
+  );
+}
+
+function PdfsList(
+  props: {
+    activeDirectory: string | null,
+    pdfList: string[],
+  }
+) {
+  const [displayPdfList, setDisplayPdfList] = useState<string[]>([]);
+  const snapshotPdfList = useRef<string[]>([]);
+
+  useEffect(() => {
+    snapshotPdfList.current = props.pdfList;
+    setDisplayPdfList(props.pdfList);
+  }, [props.pdfList]);
+
+  const liveSearch = (inputValue: string) => {
+    if (inputValue === '' || inputValue === null) {
+      setDisplayPdfList(snapshotPdfList.current);
+      return;
+    }
+
+    const filteredPdfList = snapshotPdfList.current.filter(item => item.toLowerCase().includes(inputValue.toLowerCase()));
+    setDisplayPdfList(filteredPdfList);
+  }
+
   const handleOpenFile = (event: React.MouseEvent<HTMLInputElement>, fileName: string) => {
     event.preventDefault();
     
@@ -199,14 +295,15 @@ function PdfsList(props: PdfList) {
   }
 
   return (
-    <div id='pdfs-list' className={props.className}>
-      <pre
-        className={'text-center' + (props.activeDirectory ? '' : ' hidden')}
-      >{props.activeDirectory}</pre>
+    <div id='pdf-list-search' className={(displayPdfList.length === 0 ? 'hidden' : '')}>
+      <input
+        type='text'
+        placeholder='Search...'
+        onInput={(event) => liveSearch(event.currentTarget.value)}
+      />
       <ul
-        className={'divide-y text-black' + (props.pdfList.length === 0 ? ' hidden' : '')}
-      >File List:
-        {props.pdfList.map((value, index) => (
+        className='divide-y text-black max-h-[76vh] overflow-y-auto'
+      >{displayPdfList.map((value, index) => (
           <li
             key={'open-' + index}
             className='mx-4 px-2 flex justify-between items-center text-black'
@@ -216,7 +313,7 @@ function PdfsList(props: PdfList) {
               <input
                 type='button'
                 value={'Open File'}
-                className='mx-4'
+                className='mr-4'
                 onClick={(event) => handleOpenFile(event, value)}
               />
               <input

@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, dialog, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog, screen } from 'electron';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -7,9 +7,13 @@ import * as fs from 'fs';
 let mainWindow: BrowserWindow | null;
 
 app.on('ready', () => {
+  const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const cWidth: number = Math.ceil(width*0.9);
+  const cHeight: number = Math.ceil(height*0.9);
+
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 720,
+    width: cWidth,
+    height: cHeight,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'), // for secure communication
       contextIsolation: true,
