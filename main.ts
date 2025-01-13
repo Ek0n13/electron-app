@@ -21,8 +21,11 @@ app.on('ready', () => {
     resizable: false,
   });
 
-  mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
-  // mainWindow.loadFile('../index.html');
+  if (app.isPackaged) {
+    mainWindow.loadFile('./dist/index.html');
+  } else {
+    mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
+  }
 });
 
 app.on('window-all-closed', () => {

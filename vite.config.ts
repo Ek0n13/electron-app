@@ -10,9 +10,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  base: './',
   build: {
+    outDir: 'dist',
     rollupOptions: {
       external: ['electron'],
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+      }
     },
   },
 });

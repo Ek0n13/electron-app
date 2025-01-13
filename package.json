@@ -1,5 +1,7 @@
 {
   "name": "electron-app",
+  "author": "none none <none@none.com> (http://about:blank/)",
+  "description": "pdf-manager",
   "private": true,
   "version": "0.0.0",
   "main": "dist/main.js",
@@ -9,7 +11,7 @@
     "preview": "vite preview",
     "build:main": "tsc main.ts --outDir dist --module commonjs",
     "build:preload": "tsc preload.ts --outDir dist --module commonjs",
-    "build": "vite build && npm run build:main && npm run build:preload && electron-builder",
+    "build": "vite build && npm run build:main && npm run build:preload",
     "dev-start": "npm run build:preload && npm run build:main && electron dist/main.js",
     
     "start": "electron-forge start",
