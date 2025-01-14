@@ -34,8 +34,21 @@ app.on('window-all-closed', () => {
 
 //custom functions
 ipcMain.handle('read-text-file', async(_event, filePath: string | null) => {
+  let file = filePath || './tattos.txt';
+
   try {
-    return fs.readFileSync(filePath || './tattos.txt', 'utf-8');
+    if (!fs.existsSync(file)) {
+      const result = dialog.showMessageBoxSync({
+        message: 'File does not exist.',
+
+        type: 'warning',
+        title: 'Warning!',
+      });
+
+      return null;
+    }
+
+    return fs.readFileSync(file, 'utf-8');
   } catch (error) {
     console.error('Error reading file:', error);
     return null;
@@ -122,7 +135,19 @@ ipcMain.handle('join-paths', async(_event, ...paths: string[]) => {
 
 ipcMain.on('save-last-played', (_event, fileName: string | null, data: string) => {
   try {
-    fs.writeFileSync((fileName || './tattos.txt'), data);
+    const result = dialog.showMessageBoxSync({
+      message: 'Save last played?',
+      
+      type: 'question',
+      buttons: ['Yes', 'No'],
+      defaultId: 0,
+      cancelId: 1,
+      title: 'Confirm Action',
+    });
+    
+    if (result === 0) {
+      fs.writeFileSync((fileName || './tattos.txt'), data);
+    }
   } catch (error) {
     console.error('Error saving last played:', error);
   }
