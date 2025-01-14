@@ -3,6 +3,8 @@ import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 
+if (require('electron-squirrel-startup')) app.quit();
+
 //initialization
 let mainWindow: BrowserWindow | null;
 
@@ -22,7 +24,7 @@ app.on('ready', () => {
   });
 
   if (app.isPackaged) {
-    mainWindow.loadFile('./dist/index.html');
+    mainWindow.loadFile(path.join(__dirname, 'index.html'));
   } else {
     mainWindow.loadURL('http://localhost:5173'); // Vite's default dev server
   }
@@ -33,28 +35,6 @@ app.on('window-all-closed', () => {
 });
 
 //custom functions
-ipcMain.handle('read-text-file', async(_event, filePath: string | null) => {
-  let file = filePath || './tattos.txt';
-
-  try {
-    if (!fs.existsSync(file)) {
-      const result = dialog.showMessageBoxSync({
-        message: 'File does not exist.',
-
-        type: 'warning',
-        title: 'Warning!',
-      });
-
-      return null;
-    }
-
-    return fs.readFileSync(file, 'utf-8');
-  } catch (error) {
-    console.error('Error reading file:', error);
-    return null;
-  }
-});
-
 ipcMain.handle('directory-dialog', async(_event) => {
   try {
     const dialogResult = dialog.showOpenDialogSync({
@@ -128,12 +108,36 @@ ipcMain.handle('join-paths', async(_event, ...paths: string[]) => {
   try {
     return path.join(...paths); 
   } catch (error) {
-    console.error('Error finding child directories:', error);
+    console.error('Error joining paths:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('read-text-file', async(_event, filePath: string | null) => {
+  let file = filePath || './tattos.txt';
+
+  try {
+    if (!fs.existsSync(file)) {
+      const result = dialog.showMessageBoxSync({
+        message: 'File does not exist.',
+
+        type: 'warning',
+        title: 'Warning!',
+      });
+
+      return null;
+    }
+
+    return fs.readFileSync(file, 'utf-8');
+  } catch (error) {
+    console.error('Error reading file:', error);
     return null;
   }
 });
 
 ipcMain.on('save-last-played', (_event, fileName: string | null, data: string) => {
+  let file = fileName || './tattos.txt';
+
   try {
     const result = dialog.showMessageBoxSync({
       message: 'Save last played?',
@@ -146,7 +150,7 @@ ipcMain.on('save-last-played', (_event, fileName: string | null, data: string) =
     });
     
     if (result === 0) {
-      fs.writeFileSync((fileName || './tattos.txt'), data);
+      fs.writeFileSync(file, data);
     }
   } catch (error) {
     console.error('Error saving last played:', error);
