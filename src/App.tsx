@@ -8,14 +8,14 @@ declare global {
     electron: {
       joinPaths: (...paths: string[]) => Promise<string | null>;
 
-      readTextFile: (filePath: string) => Promise<string | null>;
+      readTextFile: (filePath: string | null) => Promise<string | null>;
       readDirectory: (directory: string) => Promise<string[]>;
       directoryDialog: () => Promise<string | null>;
       getChildDirectories: (directory: string) => Promise<string[]>;
 
       openFile: (filePath: string, directory: string) => void;
       fileYTSearch: (fileString: string) => void;
-      showContextMenu: (x: number, y: number) => void;
+      saveLastPlayed: (fileName: string | null, data: string) => void;
     }
   }
 
@@ -164,9 +164,11 @@ function LeftSideParent(
           Choose Folder
         </button>
         <button
+          disabled={parentDirectory === null || parentDirectory === ''}
+          className='disabled:pointer-events-none disabled:opacity-30'
           onClick={handleGetChildDirectories}
         >
-          Get Children
+          Get Sub Folders
         </button>
       </div>
       <div
@@ -219,7 +221,7 @@ function DirectoriesList(
   return (
     <div>
       <ul
-        className='divide-y text-black max-h-[66vh] overflow-y-auto'
+        className='divide-y text-black max-h-[67vh] overflow-y-auto'
       >
         {props.childrenDirectories.map((value, index) => (
           <li
@@ -246,12 +248,43 @@ function RightSideParent(
     pdfList: string[],
   }
 ) {
+  const [lastPlayed, setLastPlayed] = useState<string | null>(null);
+
+  const scrollTo = (event: React.MouseEvent<HTMLAnchorElement>, fileName: string) => {
+    event.preventDefault();
+
+    const listItemIndex = props.pdfList.findIndex((item) => item === fileName);
+    
+    if (listItemIndex < 0) return;
+
+    const element = document.getElementById('item-' + listItemIndex);
+    element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  const handleReadTextFile = async (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+
+    const content = await window.electron.readTextFile(null);
+    setLastPlayed(content);
+  };
+
   return (
     <div id='pdfs-list' className={props.className}>
       <div className={(props.activeDirectory ? '' : ' hidden')}>
         <pre
           className={'text-center'}
-        >{props.activeDirectory}</pre>
+        >
+          <span>{props.activeDirectory}</span><br />
+          Latest: <a
+            href="#"
+            onClick={(event) => scrollTo(event, lastPlayed!)}
+          >{lastPlayed || '<none>'}</a>
+          <span className='mx-2'>|</span>
+          <a
+            href='#'
+            onClick={(event) => handleReadTextFile(event)}
+          ><i className='fas fa-download' /></a>
+        </pre>
         <PdfsList activeDirectory={props.activeDirectory} pdfList={props.pdfList} />
       </div>
     </div>
@@ -282,16 +315,22 @@ function PdfsList(
     setDisplayPdfList(filteredPdfList);
   }
 
-  const handleOpenFile = (event: React.MouseEvent<HTMLInputElement>, fileName: string) => {
+  const handleOpenFile = (event: React.MouseEvent<HTMLInputElement | HTMLAnchorElement>, fileName: string) => {
     event.preventDefault();
     
     window.electron.openFile(fileName, props.activeDirectory!);
   }
   
-  const handleYTSearch = (event: React.MouseEvent<HTMLInputElement>, fileString: string) => {
+  const handleYTSearch = (event: React.MouseEvent<HTMLInputElement | HTMLAnchorElement>, fileString: string) => {
     event.preventDefault();
     
     window.electron.fileYTSearch(fileString);
+  }
+
+  const handleSaveLastPlayed = (event: React.MouseEvent<HTMLInputElement | HTMLAnchorElement>, fileName: string | null, data: string) => {
+    event.preventDefault();
+    
+    window.electron.saveLastPlayed(fileName, data);
   }
 
   return (
@@ -302,26 +341,35 @@ function PdfsList(
         onInput={(event) => liveSearch(event.currentTarget.value)}
       />
       <ul
-        className='divide-y text-black max-h-[76vh] overflow-y-auto'
+        className='divide-y text-black max-h-[73vh] overflow-y-auto'
       >{displayPdfList.map((value, index) => (
           <li
+            id={'item-' + index}
             key={'open-' + index}
             className='mx-4 px-2 flex justify-between items-center text-black'
           >
-            <span>{value}</span>
-            <div className='my-1 flex'>
-              <input
-                type='button'
-                value={'Open File'}
+            <span className='overflow-ellipsis overflow-x-hidden'>{value}</span>
+            <div className='pl-10 my-1 flex'>
+              <a
+                href="#"
+                className='mr-4'
+                onClick={(event) => handleSaveLastPlayed(event, null, value)}
+              >
+                <i className='far fa-floppy-disk' />
+              </a>
+              <a
+                href="#"
                 className='mr-4'
                 onClick={(event) => handleOpenFile(event, value)}
-              />
-              <input
-                type='button'
-                value={'Search YT'}
-                className=''
+              >
+                <i className='far fa-file-pdf' />
+              </a>
+              <a
+                href="#"
                 onClick={(event) => handleYTSearch(event, value)}
-              />
+              >
+                <i className='fa fa-magnifying-glass' />
+              </a>
             </div>
           </li>
         ))}

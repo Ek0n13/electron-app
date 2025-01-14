@@ -13,12 +13,12 @@
     "build:preload": "tsc preload.ts --outDir dist --module commonjs",
     "build": "vite build && npm run build:main && npm run build:preload",
     "dev-start": "electron dist/main.js",
-    
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "autoprefixer": "^10.4.20",
     "electron-squirrel-startup": "^1.0.1",
     "postcss": "^8.4.49",

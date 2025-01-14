@@ -41,7 +41,7 @@
 
 #main-container pre {
   background: hsl(0, 0%, 20%);
-  padding: 10px;
+  padding: 0.1rem;
   border-radius: 5px;
   white-space: pre-wrap;
 }
@@ -61,21 +61,4 @@
 
 #main-container input[type='search']::-webkit-search-cancel-button {
   cursor: pointer;  
-}
-
-#pdfs-list li input {
-  padding-left: 0.25rem;
-  padding-right: 0.25rem;
-  color: black;
-  cursor: pointer;
-}
-
-#pdfs-list input[type=button] {
-  font-weight: 500;
-  color: #3741ff;
-  text-decoration: inherit;
-}
-
-#pdfs-list input[type=button]:hover {
-  color: #9e3feb;
 }

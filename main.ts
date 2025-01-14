@@ -33,9 +33,9 @@ app.on('window-all-closed', () => {
 });
 
 //custom functions
-ipcMain.handle('read-text-file', async(_event, filePath) => {
+ipcMain.handle('read-text-file', async(_event, filePath: string | null) => {
   try {
-    return fs.readFileSync(filePath, 'utf-8');
+    return fs.readFileSync(filePath || './tattos.txt', 'utf-8');
   } catch (error) {
     console.error('Error reading file:', error);
     return null;
@@ -64,7 +64,7 @@ ipcMain.handle('directory-dialog', async(_event) => {
   }
 });
 
-ipcMain.handle('read-directory', async(_event, directory) => {
+ipcMain.handle('read-directory', async(_event, directory: string) => {
   try {
     const files = fs.readdirSync(directory);
     return files.filter((file) => file.endsWith(".pdf"));
@@ -74,7 +74,7 @@ ipcMain.handle('read-directory', async(_event, directory) => {
   }
 });
 
-ipcMain.handle('get-child-directories', async(_event, directory) => {
+ipcMain.handle('get-child-directories', async(_event, directory: string) => {
   try {
     if (!directory) return null;
 
@@ -89,10 +89,10 @@ ipcMain.handle('get-child-directories', async(_event, directory) => {
   }
 });
 
-ipcMain.on('open-file', (_event, fileName: string, directory) => {
+ipcMain.on('open-file', (_event, fileName: string, directory: string) => {
   const fullPath = path.join(directory, fileName);
   shell.openPath(fullPath)
-    .then(() => console.log('File opened'))
+    // .then(() => console.log('File opened'))
     .catch((err) => console.error('Error opening file:', err));
 });
 
@@ -111,12 +111,20 @@ ipcMain.on('file-yt-search', (_event, fileString: string) => {
   openInEdge(finalUrl);
 });
 
-ipcMain.handle('join-paths', async(_event, ...paths) => {
+ipcMain.handle('join-paths', async(_event, ...paths: string[]) => {
   try {
     return path.join(...paths); 
   } catch (error) {
     console.error('Error finding child directories:', error);
     return null;
+  }
+});
+
+ipcMain.on('save-last-played', (_event, fileName: string | null, data: string) => {
+  try {
+    fs.writeFileSync((fileName || './tattos.txt'), data);
+  } catch (error) {
+    console.error('Error saving last played:', error);
   }
 });
 
