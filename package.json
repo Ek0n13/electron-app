@@ -6,7 +6,7 @@
   "version": "0.0.0",
   "main": "dist/main.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --force",
     "lint": "eslint .",
     "preview": "vite preview",
     "build:main": "tsc main.ts --outDir dist --module commonjs",
